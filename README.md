@@ -112,16 +112,18 @@ Calls need a real Android device or two (emulator cameras work, the iOS Simulato
 
 ### Testing calls with one phone
 
-`scripts/call-partner.mjs` plays the other side of a call from a laptop (Node 22+):
+`scripts/call-partner` plays the other side of a call from a laptop (Node 22+):
 
 ```bash
-node scripts/call-partner.mjs                    # signs in as the demo seller and waits; press a / r to accept or reject
-node scripts/call-partner.mjs --call video       # rings the phone instead
-node scripts/call-partner.mjs --auto accept      # answers automatically
+node scripts/call-partner/index.mjs                   # signs in as the demo seller and waits; press a / r to accept or reject
+node scripts/call-partner/index.mjs --call video      # rings the phone instead
+node scripts/call-partner/index.mjs --auto accept     # answers automatically
+node scripts/call-partner/index.mjs --media camera    # joins in Chrome with the laptop camera (microphone off)
+node scripts/call-partner/index.mjs --media test      # joins in headless Chrome with a test pattern and tone
 ```
 
-Once a call is accepted it prints a LiveKit Meet link: open it in a browser to talk to the phone with the laptop's
-camera and microphone.
+Without `--media`, an accepted call prints a LiveKit Meet link: open it in a browser to talk to the phone with the
+laptop's camera and microphone.
 
 ### Demo accounts
 
@@ -164,7 +166,7 @@ To demo a call: sign in as the buyer on one device and the seller on another, op
 4. **Features in vertical slices.** Auth → listings → editor and map → chat → calls → rooms, each finished end to end
    (data API, screen, empty and error states) before the next.
 5. **Test on a real phone throughout.** Calls were tested on an Android device against a second client
-   (`scripts/call-partner.mjs`). Smoothness was measured with `adb shell dumpsys gfxinfo` and fixed screen by screen.
+   (`scripts/call-partner`). Smoothness was measured with `adb shell dumpsys gfxinfo` and fixed screen by screen.
 6. **Review and harden.** A final pass went through the call flow from both sides, looking for race conditions, and
    removed unused code.
 

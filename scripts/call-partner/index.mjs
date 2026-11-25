@@ -1,19 +1,23 @@
 #!/usr/bin/env node
 // Plays the other side of a 1:1 call from a laptop, so calls can be tested with a single phone.
 //
-//   node scripts/call-partner.mjs                 # signs in as the demo seller and waits for calls
-//   node scripts/call-partner.mjs --as broker     # any demo role
-//   node scripts/call-partner.mjs --call video    # rings the phone instead (uses the most recent chat)
+//   node scripts/call-partner/index.mjs                   # signs in as the demo seller and waits for calls
+//   node scripts/call-partner/index.mjs --as broker         # any demo role
+//   node scripts/call-partner/index.mjs --call video        # rings the phone instead (uses the most recent chat)
+//   node scripts/call-partner/index.mjs --auto accept       # answers incoming calls by itself after 3 s
+//   node scripts/call-partner/index.mjs --media camera      # joins from a headless Chrome: laptop camera, mic off
+//   node scripts/call-partner/index.mjs --media test        # same, with Chrome's test pattern and tone instead
 //
 // Incoming call: press a to accept, r to reject. Once a call is accepted, the script prints a LiveKit Meet
 // link: open it in a browser to talk to the phone with the laptop's camera and microphone.
 // Press e to end the call from the laptop side, q to quit.
 import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'node:fs';
+import { joinWithTestMedia, leaveTestMedia } from './test-media.mjs';
 import { emitKeypressEvents } from 'node:readline';
 
 const env = Object.fromEntries(
-  readFileSync(new URL('../.env', import.meta.url), 'utf8')
+  readFileSync(new URL('../../.env', import.meta.url), 'utf8')
     .split('\n')
     .filter((line) => line.includes('=') && !line.startsWith('#'))
     .map((line) => [line.slice(0, line.indexOf('=')).trim(), line.slice(line.indexOf('=') + 1).trim()]),
@@ -27,6 +31,7 @@ const role = arg('as', 'seller');
 const outgoing = arg('call', null);
 // --auto accept|reject answers incoming calls after 3 s, for hands-free testing.
 const auto = arg('auto', null);
+const media = arg('media', null);
 
 const supabase = createClient(env.EXPO_PUBLIC_SUPABASE_URL, env.EXPO_PUBLIC_SUPABASE_KEY, {
   auth: { persistSession: false },
@@ -52,9 +57,10 @@ const setStatus = async (status) => {
   if (error) console.log(`Could not set ${status}: ${error.message}`);
 };
 
-const printJoinLink = async () => {
+const joinCall = async () => {
   const { data, error } = await supabase.functions.invoke('livekit-token', { body: { callId: current.id } });
   if (error || data?.error) return console.log(`Token error: ${error?.message ?? data.error}`);
+  if (media) return joinWithTestMedia(data.url, data.token, media);
   const link = `https://meet.livekit.io/custom?liveKitUrl=${encodeURIComponent(data.url)}&token=${encodeURIComponent(data.token)}`;
   console.log(`\nOpen this in a browser to join with the laptop camera and microphone:\n${link}\n`);
 };
@@ -63,7 +69,7 @@ const answer = async (choice) => {
   if (current?.status !== 'ringing' || current.callee_id !== me) return;
   if (choice === 'reject') return setStatus('rejected');
   await setStatus('accepted');
-  await printJoinLink();
+  await joinCall();
 };
 
 supabase
@@ -81,8 +87,11 @@ supabase
     current = call;
     if (call.status === before) return;
     console.log(`Call is now: ${call.status}`);
-    if (call.status === 'accepted' && call.caller_id === me) await printJoinLink();
-    if (!['ringing', 'accepted'].includes(call.status)) current = null;
+    if (call.status === 'accepted' && call.caller_id === me) await joinCall();
+    if (!['ringing', 'accepted'].includes(call.status)) {
+      current = null;
+      leaveTestMedia();
+    }
   })
   .subscribe((state) => state === 'SUBSCRIBED' && console.log('Listening for calls… (q to quit)'));
 
@@ -108,8 +117,10 @@ if (outgoing) {
 emitKeypressEvents(process.stdin);
 if (process.stdin.isTTY) process.stdin.setRawMode(true);
 process.stdin.on('keypress', async (_, key) => {
-  if (key?.ctrl && key.name === 'c') process.exit(0);
-  if (key?.name === 'q') process.exit(0);
+  if ((key?.ctrl && key.name === 'c') || key?.name === 'q') {
+    leaveTestMedia();
+    process.exit(0);
+  }
   if (!current) return;
   if (key?.name === 'a') await answer('accept');
   else if (key?.name === 'r') await answer('reject');

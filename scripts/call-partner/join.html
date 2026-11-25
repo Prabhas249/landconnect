@@ -1,0 +1,27 @@
+<!doctype html>
+<!-- Joins a LiveKit room from the laptop: camera only with ?mic=0, otherwise camera and microphone. -->
+<html>
+  <body style="margin:0;background:#111;color:#eee;font:14px system-ui">
+    <p id="status" style="position:fixed;top:0;left:0;z-index:9;margin:8px;padding:6px 10px;background:#000c">Connecting…</p>
+    <div id="remote"></div>
+    <script src="/livekit-client.umd.js"></script>
+    <script>
+      const params = new URLSearchParams(location.search);
+      const status = (text) => (document.getElementById('status').textContent = text);
+      const room = new LivekitClient.Room();
+      room.on(LivekitClient.RoomEvent.TrackSubscribed, (track) => {
+        document.getElementById('remote').appendChild(track.attach());
+      });
+      room.on(LivekitClient.RoomEvent.Disconnected, () => status('Disconnected'));
+      room
+        .connect(params.get('url'), params.get('token'))
+        .then(() =>
+          params.get('mic') === '0'
+            ? room.localParticipant.setCameraEnabled(true)
+            : room.localParticipant.enableCameraAndMicrophone(),
+        )
+        .then(() => status('In call'))
+        .catch((e) => status('Failed: ' + e.message));
+    </script>
+  </body>
+</html>
