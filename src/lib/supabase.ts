@@ -24,6 +24,12 @@ AppState.addEventListener('change', (state) => {
 });
 
 /** Turns a Supabase / Postgres error into a sentence a person can read. */
+/** Unwraps a Supabase response, throwing its error so React Query and callers see a rejection. */
+export function need<T>(res: { data: T | null; error: { message: string } | null }): T {
+  if (res.error) throw new Error(res.error.message);
+  return res.data as T;
+}
+
 export function errorMessage(e: unknown, fallback = 'Something went wrong. Please try again.') {
   if (!e) return fallback;
   const msg = typeof e === 'string' ? e : ((e as { message?: string }).message ?? '');

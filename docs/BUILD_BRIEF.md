@@ -21,7 +21,7 @@ Required features:
 Evaluated on: functional completeness, code organisation, UI/UX, and above all working calls.
 Deliverables: GitHub repo, working APK, demo video, technical write-up, AI-tools summary.
 
-## 2. Who LandConnect is (use this to look domain-aware)
+## 2. Who LandConnect is (domain context)
 
 - Confidential land platform for **Bengaluru and Karnataka**. Tone: calm, discreet, institutional. No hype.
 - Site tagline: "Acquire Land with Confidence." and "Discretion is designed in, not bolted on."

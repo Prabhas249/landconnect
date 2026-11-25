@@ -27,10 +27,10 @@ export function openActiveCall() {
   if (id) router.push({ pathname: '/call/[id]', params: { id } });
 }
 
-/** Ring the other person in a direct conversation and open the call screen. */
 /** A call being placed (RPC in flight): a double tap must not ring twice and cancel the first. */
 let placing = false;
 
+/** Ring the other person in a direct conversation and open the call screen. */
 export async function placeCall(conversationId: string, kind: CallKind) {
   if (placing || blockedByLiveCall()) return;
   placing = true;

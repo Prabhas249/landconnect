@@ -1,11 +1,6 @@
-import { supabase } from '@/lib/supabase';
-import type { Call, CallKind, CallStatus } from '@/lib/types';
+import { need, supabase } from '@/lib/supabase';
+import type { Call, CallKind } from '@/lib/types';
 import { currentUserId } from '@/stores/session';
-
-function need<T>(res: { data: T | null; error: { message: string } | null }): T {
-  if (res.error) throw new Error(res.error.message);
-  return res.data as T;
-}
 
 /**
  * Signalling lives in the `calls` table (Postgres + Realtime); media goes through LiveKit.
@@ -59,16 +54,6 @@ export async function fetchCall(id: string): Promise<Call | null> {
   return need(await supabase.from('calls').select('*').eq('id', id).maybeSingle()) as Call | null;
 }
 
-/** accept / reject / cancel / end. Stamps answered_at and ended_at as appropriate. */
-export async function setCallStatus(id: string, status: CallStatus): Promise<void> {
-  const now = new Date().toISOString();
-  const patch: Partial<Call> = { status };
-  if (status === 'accepted') patch.answered_at = now;
-  if (status !== 'accepted' && status !== 'ringing') patch.ended_at = now;
-  const { error } = await supabase.from('calls').update(patch).eq('id', id);
-  if (error) throw new Error(error.message);
-}
-
 export type LiveKitCredentials = { token: string; url: string };
 
 /** Asks the `livekit-token` edge function for a short-lived room token. The function re-checks membership. */
@@ -77,39 +62,4 @@ export async function fetchLiveKitToken(callId: string): Promise<LiveKitCredenti
   if (error) throw new Error(error.message || 'Could not connect the call.');
   if (!data?.token || !data?.url) throw new Error(data?.error ?? 'Calling is not configured on the server.');
   return data as LiveKitCredentials;
-}
-
-// ── realtime
-
-/** Fires for every new ringing call addressed to the user. */
-export function subscribeIncomingCalls(userId: string, onRing: (call: Call) => void): () => void {
-  const channel = supabase
-    .channel(`incoming-calls:${userId}`)
-    .on(
-      'postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'calls', filter: `callee_id=eq.${userId}` },
-      (payload) => {
-        const call = payload.new as Call;
-        if (call.status === 'ringing') onRing(call);
-      },
-    )
-    .subscribe();
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}
-
-/** Follows one call's status so both sides tear down together. */
-export function subscribeCall(callId: string, onUpdate: (call: Call) => void): () => void {
-  const channel = supabase
-    .channel(`call:${callId}`)
-    .on(
-      'postgres_changes',
-      { event: 'UPDATE', schema: 'public', table: 'calls', filter: `id=eq.${callId}` },
-      (payload) => onUpdate(payload.new as Call),
-    )
-    .subscribe();
-  return () => {
-    supabase.removeChannel(channel);
-  };
 }

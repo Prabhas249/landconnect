@@ -1,11 +1,6 @@
-import { supabase } from '@/lib/supabase';
+import { need, supabase } from '@/lib/supabase';
 import type { Profile, ProfilePrivate } from '@/lib/types';
 import { currentUserId } from '@/stores/session';
-
-function need<T>(res: { data: T | null; error: { message: string } | null }): T {
-  if (res.error) throw new Error(res.error.message);
-  return res.data as T;
-}
 
 export async function fetchProfile(id: string): Promise<Profile | null> {
   return need(await supabase.from('profiles').select('*').eq('id', id).maybeSingle()) as Profile | null;

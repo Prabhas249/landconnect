@@ -1,19 +1,14 @@
-import { supabase } from '@/lib/supabase';
+import { need, supabase } from '@/lib/supabase';
 import { toAcres } from '@/lib/format';
 import type { Listing, ListingFilters, ListingInput, ListingWithOwner } from '@/lib/types';
 import { currentUserId } from '@/stores/session';
 
 const WITH_OWNER = '*, owner:profiles!listings_owner_id_fkey(*)';
 
-function need<T>(res: { data: T | null; error: { message: string } | null }): T {
-  if (res.error) throw new Error(res.error.message);
-  return res.data as T;
-}
-
-/** Community feed: every non-draft listing, filtered and sorted client-side for area. */
 /** Most rows one feed query returns. A result shorter than this is the complete set for its filters. */
 export const LISTINGS_LIMIT = 200;
 
+/** Community feed: every non-draft listing, filtered and sorted client-side for area. */
 export async function fetchListings(filters: ListingFilters = {}): Promise<ListingWithOwner[]> {
   let q = supabase.from('listings').select(WITH_OWNER).neq('status', 'draft');
 

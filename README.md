@@ -52,7 +52,7 @@ Built for the LandConnect technical assignment (Mobile Developer).
 ┌──────────────────────────── React Native app ────────────────────────────┐
 │ src/app            routes only (thin)                                    │
 │ src/features/*     screens + components per feature                      │
-│ src/data/*         typed data API (the only place that talks to Supabase)│
+│ src/data/*         typed data API (main path to Supabase)                │
 │ src/stores/*       session, call state machine, editor↔map hand-off      │
 │ src/ui + src/theme design system: tokens and primitives                  │
 └──────────────┬───────────────────────────────┬──────────────────────────┘
@@ -143,8 +143,8 @@ To demo a call: sign in as the buyer on one device and the seller on another, op
   REST API (PostgREST), authentication, realtime and storage. That covered the brief's backend list (REST APIs,
   PostgreSQL, authentication and authorization) without spending the five days on boilerplate, and left the time for
   calling. Custom server logic lives in Postgres functions (`start_call`, `open_direct_conversation`, `create_room`) and
-  one TypeScript edge function (`livekit-token`). Authorization is enforced by row level security in the database,
-  so it cannot be bypassed by a modified client.
+  one TypeScript edge function (`livekit-token`). Authorization is enforced in the database (row level security
+  decides which rows, column grants decide which fields), so a modified client cannot bypass it.
 - **LiveKit over raw WebRTC.** A hosted SFU removes TURN, reconnection and multi-party mesh problems, and one code
   path serves both 1:1 calls and meeting rooms. Reliability in a live demo mattered more than owning the media layer.
 - **Signalling in Postgres.** The `calls` table is the single source of truth for call state. It gives ringing,
@@ -198,6 +198,10 @@ To demo a call: sign in as the buyer on one device and the seller on another, op
 - "Hide exact location" is applied in the app (other users get a fuzzed point and a 750 m disc, never the
   boundary). The API still returns the true coordinates; a production build would mask them in a database view.
 - A busy callee currently shows as "Declined" to the caller (both write the same status).
+- "Who can call me" enforces *Nobody*; *My contacts* currently behaves like *Everyone*.
+- Blocking prevents new chats and calls, but messages in an already-open chat are not blocked yet.
+- Lists are not paginated yet: chats load the latest 80 messages and the feed the first 200 listings.
+- No automated tests yet; the call state machine in `call-store.ts` is the first candidate.
 - No payments, document vault or KYC — out of scope for this assignment.
 
 ## AI tools usage

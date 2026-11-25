@@ -7,7 +7,7 @@ import type { Call, CallStatus } from '@/lib/types';
 /**
  * Race-safe helpers on top of the `calls` signalling table.
  *
- * Why not call `setCallStatus` / `subscribeCall` from `@/data/calls` directly?
+ * Why not a plain status update and one shared subscription per call?
  *
  * 1. Compare-and-set. Two people can act on the same row at the same instant
  *    (callee accepts while the caller cancels, both hang up together). A plain
@@ -46,7 +46,7 @@ function uniqueTopic(base: string) {
  * Moves a call to `to` only if it is currently in one of `from`.
  * Resolves with the updated row when this client won, or `null` when the row
  * had already moved on (the caller should then reconcile with `fetchCall`).
- * Timestamps mirror `setCallStatus`: answered_at on accept, ended_at on any end.
+ * Stamps answered_at on accept and ended_at on any end.
  */
 export async function transitionCall(id: string, to: CallStatus, from: CallStatus[]): Promise<Call | null> {
   const now = new Date().toISOString();
@@ -138,7 +138,7 @@ export async function findRingingCall(userId: string): Promise<Call | null> {
 }
 
 /**
- * Listens for calls ringing the user. Same filter as `subscribeIncomingCalls`, plus:
+ * Listens for calls ringing the user. Realtime INSERTs where callee_id is the user, plus:
  * a catch-up query once the channel is live and whenever the app returns to the
  * foreground, so a ring that arrived while the socket was down still surfaces.
  * Duplicates are expected — the store de-duplicates by call id.

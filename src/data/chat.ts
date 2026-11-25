@@ -1,11 +1,6 @@
-import { supabase } from '@/lib/supabase';
+import { need, supabase } from '@/lib/supabase';
 import type { Conversation, ConversationSummary, Listing, Message, MessageKind, MessageMeta, Profile } from '@/lib/types';
 import { currentUserId } from '@/stores/session';
-
-function need<T>(res: { data: T | null; error: { message: string } | null }): T {
-  if (res.error) throw new Error(res.error.message);
-  return res.data as T;
-}
 
 type MemberRow = { user_id: string; last_read_at: string; profile: Profile };
 type ConversationRow = Conversation & {
