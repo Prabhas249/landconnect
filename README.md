@@ -8,7 +8,7 @@ Built for the LandConnect technical assignment (Mobile Developer).
 | | |
 |---|---|
 | **Android APK** | [landconnect.apk](https://github.com/Prabhas249/landconnect/releases/download/v1.0/landconnect.apk) (Android 7+, arm64) |
-| **Demo video** | _link to the walkthrough_ |
+| **Demo video** | [LandConnect-demo.mp4](https://github.com/Prabhas249/landconnect/releases/download/v1.0/LandConnect-demo.mp4) (1:30, screen recording) |
 | **Demo login** | One tap on the sign-in screen (Buyer, Seller or Broker), or see [Demo accounts](#demo-accounts) |
 
 ## Features
