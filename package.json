@@ -74,5 +74,7 @@
     "staticFeatureFlags": {
       "ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS": true
     }
-  }
+  },
+  "license": "UNLICENSED",
+  "author": "Prabhas Raju"
 }

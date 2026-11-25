@@ -1,5 +1,7 @@
 # LandConnect — land marketplace prototype
 
+> © 2026 Prabhas Raju. All rights reserved. Shared for the LandConnect technical evaluation only; see [License](#license).
+
 A React Native prototype of a land marketplace for buyers, sellers and brokers: browse geotagged land,
 manage listings, chat, hold meeting rooms, and place **in-app audio and video calls without ever exchanging phone numbers**.
 
@@ -225,3 +227,9 @@ How it contributed:
 My part: the product and design direction, every design review on the device, deciding what to build and what to
 cut, testing on a real phone, and checking each change. Every change was type-checked (`tsc --noEmit`) and tested
 against the live backend, and I can walk through any part of the code.
+
+## License
+
+© 2026 Prabhas Raju. **All rights reserved.** This repository is shared only for the LandConnect technical
+evaluation. No permission is granted to copy, modify, distribute or use this code or any part of it without
+written permission. See [LICENSE](LICENSE).
